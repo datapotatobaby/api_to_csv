@@ -1,0 +1,6 @@
+# Ignore virtual environment and other folders
+venv/
+.vscode/
+csv/
+__pycache__/
+secrets/
