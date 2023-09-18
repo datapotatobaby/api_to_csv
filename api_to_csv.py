@@ -1,28 +1,51 @@
-## This script demonstrates fetching product variant data from
-## Shopify via GraphQL API. The query is returned as a JSON object
-## and then parsed and written into a CSV file. 
-##
-## This script was developed because as I learned more about utilizing 
-## Shopify's data to improve our operations, I found myself constantly 
-## needing to manually join product, inventory, and sales data 
-## exports in order to get the information I wanted together in one
-## table. Now, I can query the specific data I want, and perform analysis
-## on the csv that this script generates. 
-##
-## This script assumes that you have a Shopify account and have 
-## first created a custom app there in order to get an API key.
-##  
-## CSV files are saved to /csv. 
+"""
+api_to_csv.py
+
+Author: Erik Hanson
+Date: 2023-09-16
+Version: 1.0
+
+Description:
+This Python script fetches data from Shopify using GraphQL API calls.
+The queried data is then parsed and saved into a CSV file, which allows for easy analysis
+of specific groupings of data within Shopify API. The script is designed to handle API pagination
+and common error scenarios. 
+
+The default query in this script fetches all product variants from the specified Shopify store
+along with some of their most important data. My intention with this script is that it is useful for
+any GraphQL API query. One would simply replace the default GRAPHQL_QUERY variable with their own
+and then modify the JSON parsing block of code below to match the contents of the query. 
+
+This script was developed because, as I learned more about utilizing Shopify's data to improve 
+aspects of my business' operations, I found myself constantly needing to manually join product, 
+inventory, and sales data exports in order to get the information I wanted together into one
+table.
+
+This script assumes that you have created a custom app within a Shopify and have been granted an 
+API key from it.
+
+
+Dependencies:
+- Python 3.x
+- 'requests' Python package
+- 'csv' Python package
+- 'time' Python package
+
+Environment Setup:
+- Requires a separate 'credentials.py' file for storing API keys and passwords.
+- Ensure this 'credentials.py' is listed in the '.gitignore' file.
+
+Usage:
+python api_to_csv.py
+
+Output:
+CSV file saved in the '/csv/' directory, named 'products.csv'.
+
+"""
 
 import requests
 import csv
 import time
-
-## IMPORTANT: Put your own secrets in a separate file called 'credentials.py'
-## and make sure that it listend in your '.gitignore' file so that
-## you don't accidentally share them. A truly better practice would be to
-## work here with something like HashiCorp Vault, however I'm keeping this simple
-## for the sake of demonstration.
 
 from credentials import SHOPIFYAPI_KEY, SHOPIFYPW, SHOPIFYSITE 
 
@@ -69,6 +92,15 @@ query ($cursor: String) {
 ## are handled through the POST method.
 
 def fetch_query():
+    """
+    Connects to Shopify's GraphQL API and fetches product variant data.
+    Handles pagination and the following errors:
+    - API Throttling: Waits for 10 seconds before retrying.
+    - Other GraphQL errors: Prints the error and breaks the loop.
+    
+    Returns:
+        List of dictionaries containing the queried data fields.
+    """
     shop_url = f"https://{SHOPIFYAPI_KEY}:{SHOPIFYPW}@{SHOPIFYSITE}/admin/api/{API_VERSION}/graphql.json"
     query = []
 
@@ -78,8 +110,6 @@ def fetch_query():
     while has_next_page:
         response = requests.post(shop_url, json={'query': GRAPHQL_QUERY, 'variables': variables})
         json_data = response.json()
-
-## Handle common errors
 
         if 'errors' in json_data:
             error_code = json_data['errors'][0].get('extensions', {}).get('code', '')
@@ -121,8 +151,6 @@ def fetch_query():
                 'product_title': variant['product']['title']
             })
 
-## API pagination handling
-
         has_next_page = query_data['pageInfo']['hasNextPage']
         if has_next_page:
             last_cursor = query_data['edges'][-1]['cursor']
@@ -130,17 +158,25 @@ def fetch_query():
 
     return query
 
-## Save the results of 
-
 def save_to_csv(data, filename):
+    """
+    Saves the provided data into a CSV file with a specified filename.
+    
+    Parameters:
+        - data: List of dictionaries containing the queried data fields.
+        - filename: The name of the CSV file to save the data in.
+    """
     with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=data[0].keys())
         writer.writeheader()
         writer.writerows(data)
 
 def main():
+    """
+    Main function to execute the query fetching and CSV writing process.
+    """
     query = fetch_query()
-    save_to_csv(query, '/csv/fula_products.csv')
+    save_to_csv(query, './csv/products.csv')
 
 if __name__ == "__main__":
     main()

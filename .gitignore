@@ -3,4 +3,6 @@ venv/
 .vscode/
 csv/
 __pycache__/
-secrets/
+
+#ignore credentials
+credentials.py
