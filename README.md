@@ -11,7 +11,7 @@ of specific groupings of data within Shopify API. The script is designed to hand
 
 The default query in this script fetches all product variants from the specified Shopify store along with some of their most important data. My intention with this script is that it is useful for any GraphQL API query. One would simply replace the default GRAPHQL_QUERY variable with their own and then modify the JSON parsing block of code below to match the contents of the query. 
 
-This script was developed because, as I learned more about utilizing Shopify's data to improve aspects of my business' operations, I found myself constantly needing to manually join product, inventory, and sales data exports in order to get the information I wanted together into onetable.
+This script was developed because, as I learned more about utilizing Shopify's data to improve aspects of my business' operations, I found myself constantly needing to manually join product, inventory, and sales data exports in order to get the information I wanted together into one table.
 
 This script assumes that you have created a custom app within a Shopify and have been granted an API key from it.
 
